@@ -1,8 +1,9 @@
 import Browser
 import Html exposing (..)
+import Html exposing (Html, button, div, text)
 import Html.Attributes exposing (..)
-import Html.Events exposing (onInput)
-
+import Html.Events exposing (onInput, onClick)
+import Char exposing (isDigit, isUpper, isLower)
 
 
 -- MAIN
@@ -20,12 +21,14 @@ type alias Model =
   { name : String
   , password : String
   , passwordAgain : String
+  , result : String
+  , error : String
   }
 
 
 init : Model
 init =
-  Model "" "" ""
+  Model "" "" "" "" ""
 
 
 
@@ -36,6 +39,7 @@ type Msg
   = Name String
   | Password String
   | PasswordAgain String
+  | Submit
 
 
 update : Msg -> Model -> Model
@@ -50,6 +54,9 @@ update msg model =
     PasswordAgain password ->
       { model | passwordAgain = password }
 
+    Submit ->
+      viewValidation model
+
 
 
 -- VIEW
@@ -61,7 +68,8 @@ view model =
     [ viewInput "text" "Name" model.name Name
     , viewInput "password" "Password" model.password Password
     , viewInput "password" "Re-enter Password" model.passwordAgain PasswordAgain
-    , viewValidation model
+    , button [onClick Submit ] [text "submit"]
+    , div [ style "color" model.result ] [ text model.error ]
     ]
 
 
@@ -70,12 +78,15 @@ viewInput t p v toMsg =
   input [ type_ t, placeholder p, value v, onInput toMsg ] []
 
 
-viewValidation : Model -> Html msg
+viewValidation : Model -> Model
 viewValidation model =
   if model.password == model.passwordAgain then
     if String.length(model.password) >= 8 then
-      div [ style "color" "green" ] [ text "OK" ]
+      if String.any isDigit model.password && String.any isUpper model.password && String.any isLower model.password then
+        {model | result = "green", error = "OK"}
+      else
+        {model | result = "red", error = "must contain upper lower digit"}
     else
-      div [ style "color" "red" ] [ text "too short" ]
+      {model | result = "red", error = "too short"}
   else
-    div [ style "color" "red" ] [ text "Passwords do not match!" ]
+    {model | result = "red", error = "Passwords do not match!"}
