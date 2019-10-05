@@ -21,14 +21,13 @@ type alias Model =
   { name : String
   , password : String
   , passwordAgain : String
-  , result : String
-  , error : String
+  , submit : Bool
   }
 
 
 init : Model
 init =
-  Model "" "" "" "" ""
+  Model "" "" "" False
 
 
 
@@ -46,16 +45,16 @@ update : Msg -> Model -> Model
 update msg model =
   case msg of
     Name name ->
-      { model | name = name }
+      { model | name = name, submit = False }
 
     Password password ->
-      { model | password = password }
+      { model | password = password, submit = False }
 
     PasswordAgain password ->
-      { model | passwordAgain = password }
+      { model | passwordAgain = password, submit = False }
 
     Submit ->
-      viewValidation model
+      { model | submit = True}
 
 
 
@@ -69,7 +68,7 @@ view model =
     , viewInput "password" "Password" model.password Password
     , viewInput "password" "Re-enter Password" model.passwordAgain PasswordAgain
     , button [onClick Submit ] [text "submit"]
-    , div [ style "color" model.result ] [ text model.error ]
+    , viewValidation model
     ]
 
 
@@ -78,15 +77,18 @@ viewInput t p v toMsg =
   input [ type_ t, placeholder p, value v, onInput toMsg ] []
 
 
-viewValidation : Model -> Model
+viewValidation : Model -> Html msg
 viewValidation model =
-  if model.password == model.passwordAgain then
-    if String.length(model.password) >= 8 then
-      if String.any isDigit model.password && String.any isUpper model.password && String.any isLower model.password then
-        {model | result = "green", error = "OK"}
+  if model.submit then
+    if model.password == model.passwordAgain then
+      if String.length(model.password) >= 8 then
+        if String.any isDigit model.password && String.any isUpper model.password && String.any isLower model.password then
+          div [] [ text "" ]
+        else
+          div [ style "color" "red" ] [ text "must contain upper lower digit" ]
       else
-        {model | result = "red", error = "must contain upper lower digit"}
+        div [ style "color" "red" ] [ text "too short" ]
     else
-      {model | result = "red", error = "too short"}
+      div [ style "color" "red" ] [ text "Passwords do not match!" ]
   else
-    {model | result = "red", error = "Passwords do not match!"}
+    div [] [ text ""]
